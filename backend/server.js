@@ -32,6 +32,8 @@ if (!process.env.MONGO_URI) {
   console.error("Warning: MONGO_URI env variable is not defined!");
 }
 
-mongoose.connect(process.env.MONGO_URI || '')
+mongoose.connect(process.env.MONGO_URI || '', {
+  serverSelectionTimeoutMS: 5000 // 5 seconds timeout
+})
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
