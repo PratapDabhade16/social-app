@@ -22,11 +22,16 @@ app.use('/uploads', express.static(uploadsDir));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/posts', require('./routes/posts'));
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log('MongoDB connected');
-    app.listen(process.env.PORT, () =>
-      console.log(`Server running on port ${process.env.PORT}`)
-    );
-  })
-  .catch(err => console.log(err));
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () =>
+  console.log(`Server running on port ${PORT}`)
+);
+
+if (!process.env.MONGO_URI) {
+  console.error("Warning: MONGO_URI env variable is not defined!");
+}
+
+mongoose.connect(process.env.MONGO_URI || '')
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
