@@ -3,12 +3,23 @@ const multer  = require('multer');
 const path    = require('path');
 const Post    = require('../models/Post');
 const protect = require('../middleware/auth');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// Multer setup for image uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename:    (req, file, cb) =>
-    cb(null, Date.now() + path.extname(file.originalname))
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Configure Multer with Cloudinary Storage
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'social-app-uploads',
+    allowed_formats: ['jpg', 'png', 'jpeg', 'webp']
+  }
 });
 const upload = multer({ storage });
 
@@ -45,7 +56,7 @@ router.get('/', protect, async (req, res) => {
 router.post('/', protect, upload.single('image'), async (req, res) => {
   try {
     const { content } = req.body;
-    const image = req.file ? `/uploads/${req.file.filename}` : '';
+    const image = req.file ? req.file.path : '';
 
     if (!content && !image)
       return res.status(400).json({ message: 'Post must have text or image' });

@@ -90,7 +90,7 @@ export default function PostCard({ post, currentUser, onUpdate }) {
       {post.image && (
         <Box px={2.5} pb={2}>
           <img
-            src={`${IMAGE_BASE}${post.image}`}
+            src={post.image.startsWith('http') ? post.image : `${IMAGE_BASE}${post.image}`}
             alt="post"
             style={{
               width: '100%',
