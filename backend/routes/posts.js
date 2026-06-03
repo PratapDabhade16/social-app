@@ -26,8 +26,8 @@ router.get('/', protect, async (req, res) => {
 
     const posts = await Post.aggregate([
       { $addFields: {
-          likesCount:    { $size: '$likes' },
-          commentsCount: { $size: '$comments' }
+          likesCount:    { $size: { $ifNull: [ '$likes', [] ] } },
+          commentsCount: { $size: { $ifNull: [ '$comments', [] ] } }
       }},
       { $sort: sortObj },
       { $skip: (page - 1) * limit },
@@ -68,6 +68,7 @@ router.put('/:id/like', protect, async (req, res) => {
     if (!post) return res.status(404).json({ message: 'Post not found' });
 
     const username = req.user.username;
+    post.likes = post.likes || [];
     const alreadyLiked = post.likes.includes(username);
 
     if (alreadyLiked) {
@@ -89,7 +90,11 @@ router.post('/:id/comment', protect, async (req, res) => {
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ message: 'Post not found' });
 
-    post.comments.push({ username: req.user.username, text: req.body.text });
+    if (!req.body.text || !req.body.text.trim()) {
+      return res.status(400).json({ message: 'Comment text is required' });
+    }
+
+    post.comments.push({ username: req.user.username, text: req.body.text.trim() });
     await post.save();
     res.json(post);
   } catch (err) {
